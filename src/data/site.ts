@@ -2,17 +2,17 @@ export const SITE = {
   nome: 'Cristiane Souza',
   nomeCompleto: 'Cristiane Souza Arquitetura e Interiores',
   subtitulo: 'Arquitetura e Interiores',
-  cau: 'CAU A-315284-7',
+  cau: 'CAU A315284-7',
   descricao:
     'Arquitetura e interiores residenciais e comerciais. Projetos pensados para quem vai viver neles, do conceito ao detalhamento de marcenaria, luz e acabamento.',
   areaRestrita: '/login',
 } as const;
 
 export const CONTATO = {
-  whatsapp: '5500000000000',
-  whatsappExibicao: '(00) 00000-0000',
-  email: 'contato@cristianesouza.arq.br',
-  instagram: 'cristianesouza.arq',
+  whatsapp: '5535998071578',
+  whatsappExibicao: '(35) 99807-1578',
+  email: 'arq.cristianesouza@gmail.com',
+  instagram: 'cristianesouza_arquiteta',
 } as const;
 
 export const SOBRE = {

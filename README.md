@@ -41,7 +41,6 @@ Domínio próprio: no Worker, aba **Domains → Add custom domain**. Depois, tro
 
 ## Pendências de conteúdo
 
-- WhatsApp, e-mail e Instagram reais (`src/data/site.ts`) — hoje são placeholders.
 - Logo em vetor (SVG) para substituir `src/assets/logo*.png`.
 - Revisar descrições dos projetos e texto do Sobre; confirmar "Dapraça", "Suíte" e "Banheiro".
 - Domínio definitivo.
