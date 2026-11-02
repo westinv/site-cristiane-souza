@@ -1,0 +1,171 @@
+---
+import { Image } from 'astro:assets';
+import logoMark from '../assets/logo-mark.png';
+import { SITE } from '../data/site';
+
+interface Props {
+  transparente?: boolean;
+}
+
+const { transparente = false } = Astro.props;
+---
+
+<header class="hd" data-header data-solid={transparente ? undefined : ''} data-transparente={transparente ? '' : undefined}>
+  <div class="hd-in">
+    <a href="/" class="hd-brand" aria-label={`${SITE.nome} — início`}>
+      <Image src={logoMark} alt="" class="hd-mark" width={80} height={80} loading="eager" />
+      <span class="wm hd-rule" aria-hidden="true"></span>
+      <span class="wm hd-words">
+        <span class="hd-name">{SITE.nome}</span>
+        <span class="hd-sub">ARQUITETURA E INTERIORES</span>
+      </span>
+    </a>
+    <nav class="hn" aria-label="Principal">
+      <a class="hd-link" href="/#projetos">Projetos</a>
+      <a class="hd-link hn-opt" href="/#sobre">Sobre</a>
+      <a class="hd-link" href="/contato">Contato</a>
+      <a class="hd-cta" href={SITE.areaRestrita}>Área restrita</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .hd {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    color: var(--bg);
+    background: linear-gradient(180deg, rgba(17, 21, 16, 0.45), rgba(17, 21, 16, 0));
+    border-bottom: 1px solid transparent;
+    transition: background .5s ease, color .5s ease, border-color .5s ease, backdrop-filter .5s ease;
+  }
+  .hd[data-solid] {
+    color: var(--text);
+    background: rgba(247, 244, 239, 0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom-color: rgba(29, 35, 28, 0.08);
+  }
+  .hd-in {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    transition: height .45s var(--ease);
+  }
+  .hd[data-solid] .hd-in { height: 60px; }
+
+  .hd-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .hd-brand:hover { color: inherit; }
+  .hd-mark {
+    height: 40px;
+    width: auto;
+    filter: brightness(0) invert(1);
+    transition: filter .5s ease, height .45s var(--ease);
+  }
+  .hd[data-solid] .hd-mark { filter: none; height: 34px; }
+
+  .hd-rule {
+    display: block;
+    width: 1px;
+    height: 30px;
+    background: rgba(247, 244, 239, 0.35);
+    transition: background .5s;
+  }
+  .hd[data-solid] .hd-rule { background: rgba(29, 35, 28, 0.18); }
+
+  .hd-words { display: flex; flex-direction: column; gap: 3px; }
+  .hd-name {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .hd-sub {
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    font-weight: 600;
+    white-space: nowrap;
+    color: rgba(247, 244, 239, 0.75);
+    transition: color .5s;
+  }
+  .hd[data-solid] .hd-sub { color: var(--terracota); }
+
+  .hn {
+    display: flex;
+    align-items: center;
+    gap: clamp(18px, 3vw, 36px);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .hn a { white-space: nowrap; }
+
+  .hd-link {
+    position: relative;
+    text-decoration: none;
+    padding: 6px 0;
+    opacity: 0.88;
+  }
+  .hd-link::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .35s var(--ease);
+  }
+  .hd-link:hover { color: inherit; opacity: 1; }
+  .hd-link:hover::after { transform: scaleX(1); }
+
+  .hd-cta {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    padding: 9px 16px;
+    border-radius: var(--r-pill);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(247, 244, 239, 0.5);
+    color: var(--bg);
+    transition: all .4s ease;
+  }
+  .hd-cta:hover { background: var(--bg); color: var(--text); }
+  .hd[data-solid] .hd-cta { background: var(--green); border-color: var(--green); color: var(--bg); }
+  .hd[data-solid] .hd-cta:hover { background: var(--terracota); border-color: var(--terracota); color: #fff; }
+
+  @media (max-width: 640px) {
+    .wm { display: none; }
+    .hn { gap: 16px; }
+    .hn-opt { display: none; }
+  }
+</style>
+
+<script>
+  const hd = document.querySelector<HTMLElement>('[data-header][data-transparente]');
+  if (hd) {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      hd.toggleAttribute('data-solid', scrollY > innerHeight - 90);
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', onScroll);
+    update();
+  }
+</script>

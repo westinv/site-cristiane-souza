@@ -1,0 +1,204 @@
+---
+import Base from '../layouts/Base.astro';
+import { CONTATO, instagramLink, whatsappLink } from '../data/site';
+
+const TIPOS = ['Residencial', 'Comercial', 'Interiores', 'Marcenaria'];
+---
+
+<Base title="Contato" description="Conte sobre o seu projeto. Solicite um orçamento de arquitetura ou interiores.">
+  <section class="contato">
+    <div data-rv class="info">
+      <h1>Conte sobre<br /><span class="serif-accent">o seu projeto.</span></h1>
+      <dl>
+        <div><dt>WhatsApp</dt><dd><a href={whatsappLink()} target="_blank" rel="noopener">{CONTATO.whatsappExibicao}</a></dd></div>
+        <div><dt>Email</dt><dd><a href={`mailto:${CONTATO.email}`}>{CONTATO.email}</a></dd></div>
+        <div><dt>Instagram</dt><dd><a href={instagramLink} target="_blank" rel="noopener">@{CONTATO.instagram}</a></dd></div>
+      </dl>
+    </div>
+
+    <div data-rv class="box">
+      <form data-form novalidate data-wa={CONTATO.whatsapp}>
+        <label class="visually-hidden" for="f-nome">Nome</label>
+        <input id="f-nome" name="nome" placeholder="Nome" autocomplete="name" required />
+        <label class="visually-hidden" for="f-contato">Email ou telefone</label>
+        <input id="f-contato" name="contato" placeholder="Email ou telefone" autocomplete="email" required />
+        <fieldset class="chips">
+          <legend class="visually-hidden">Tipo de projeto</legend>
+          {
+            TIPOS.map((t, i) => (
+              <label class="chip">
+                <input type="radio" name="tipo" value={t} checked={i === 0} />
+                <span>{t}</span>
+              </label>
+            ))
+          }
+        </fieldset>
+        <label class="visually-hidden" for="f-msg">Mensagem</label>
+        <textarea id="f-msg" name="msg" placeholder="Mensagem" rows="4"></textarea>
+        <div class="erro" data-erro role="alert" hidden>Preencha nome e contato.</div>
+        <button type="submit" class="pill pill--dark enviar">Enviar mensagem</button>
+      </form>
+
+      <div class="ok" data-ok hidden>
+        <div class="ok-icon" aria-hidden="true">✓</div>
+        <div class="ok-title">Mensagem pronta.</div>
+        <p>Obrigada, <span data-ok-nome></span>. Finalize o envio no WhatsApp que abrimos para você — o retorno vem em breve.</p>
+        <a class="ok-link" data-ok-wa href="#" target="_blank" rel="noopener">Abrir o WhatsApp de novo ›</a>
+        <button type="button" class="ok-again" data-again>Enviar outra mensagem ›</button>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .contato {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: clamp(120px, 14vw, 180px) 24px clamp(80px, 10vw, 140px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+    gap: clamp(40px, 7vw, 100px);
+  }
+  .info { display: flex; flex-direction: column; gap: 28px; }
+  h1 {
+    margin: 0;
+    font-size: clamp(48px, 7vw, 92px);
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 0.96;
+  }
+  h1 .serif-accent { color: var(--terracota); }
+  dl { display: flex; flex-direction: column; gap: 18px; font-size: 17px; margin: 0; }
+  dt { font-size: 13px; color: var(--gray-4); }
+  dd { margin: 0; }
+  dd a { text-decoration: none; font-weight: 600; }
+
+  .box {
+    background: var(--card);
+    border-radius: var(--r-block);
+    padding: clamp(28px, 4vw, 48px);
+    box-shadow: var(--shadow-card);
+    align-self: start;
+  }
+  form { display: flex; flex-direction: column; gap: 14px; }
+  input:not([type='radio']), textarea {
+    font: inherit;
+    font-size: 17px;
+    color: var(--text);
+    border: 1px solid rgba(29, 35, 28, 0.16);
+    border-radius: var(--r-input);
+    padding: 16px 18px;
+    background: var(--input);
+    outline: none;
+    transition: border-color .25s ease, box-shadow .25s ease;
+  }
+  textarea { resize: vertical; }
+  input:not([type='radio']):focus, textarea:focus {
+    border-color: var(--terracota);
+    box-shadow: 0 0 0 4px rgba(191, 106, 88, 0.15);
+  }
+  input[aria-invalid='true'] { border-color: var(--erro); }
+
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; border: 0; padding: 0; margin: 0; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip span {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: var(--r-pill);
+    cursor: pointer;
+    border: 1px solid rgba(29, 35, 28, 0.2);
+    color: var(--text);
+    transition: all .25s ease;
+  }
+  .chip span:hover { border-color: var(--text); }
+  .chip input:checked + span { background: var(--green); border-color: var(--green); color: var(--bg); }
+  .chip input:focus-visible + span { outline: 2px solid var(--terracota); outline-offset: 3px; }
+
+  .erro { font-size: 14px; color: var(--erro); }
+  .enviar { font-size: 17px; padding: 16px 28px; margin-top: 6px; }
+
+  .ok { display: flex; flex-direction: column; gap: 14px; min-height: 320px; justify-content: center; }
+  .ok[hidden] { display: none; }
+  .ok-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--green);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+  .ok-title { font-size: 32px; font-weight: 700; letter-spacing: -0.04em; }
+  .ok p { margin: 0; color: var(--gray-1); font-size: 17px; line-height: 1.5; }
+  .ok-link, .ok-again {
+    align-self: flex-start;
+    font-size: 15px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--terracota);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .ok-link { color: var(--text); }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-form]')!;
+  const erro = document.querySelector<HTMLElement>('[data-erro]')!;
+  const ok = document.querySelector<HTMLElement>('[data-ok]')!;
+  const okNome = document.querySelector<HTMLElement>('[data-ok-nome]')!;
+  const okWa = document.querySelector<HTMLAnchorElement>('[data-ok-wa]')!;
+  const campoNome = form.querySelector<HTMLInputElement>('[name="nome"]')!;
+  const campoContato = form.querySelector<HTMLInputElement>('[name="contato"]')!;
+
+  form.addEventListener('input', () => {
+    erro.hidden = true;
+    form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const d = new FormData(form);
+    const nome = String(d.get('nome') ?? '').trim();
+    const contato = String(d.get('contato') ?? '').trim();
+    const tipo = String(d.get('tipo') ?? '');
+    const msg = String(d.get('msg') ?? '').trim();
+
+    if (!nome || !contato) {
+      erro.hidden = false;
+      if (!nome) campoNome.setAttribute('aria-invalid', 'true');
+      if (!contato) campoContato.setAttribute('aria-invalid', 'true');
+      (nome ? campoContato : campoNome).focus();
+      return;
+    }
+
+    const texto = [
+      `Olá, Cristiane! Meu nome é ${nome}.`,
+      `Tipo de projeto: ${tipo}.`,
+      msg && `\n${msg}`,
+      `\nContato: ${contato}`,
+    ].filter(Boolean).join('\n');
+    const url = `https://wa.me/${form.dataset.wa}?text=${encodeURIComponent(texto)}`;
+
+    window.open(url, '_blank', 'noopener');
+    okNome.textContent = nome;
+    okWa.href = url;
+    form.hidden = true;
+    ok.hidden = false;
+  });
+
+  document.querySelector('[data-again]')!.addEventListener('click', () => {
+    form.reset();
+    ok.hidden = true;
+    form.hidden = false;
+    campoNome.focus();
+  });
+</script>

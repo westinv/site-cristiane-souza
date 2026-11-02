@@ -1,0 +1,50 @@
+---
+import { whatsappLink } from '../data/site';
+---
+
+<section class="cta">
+  <div data-rv class="cta-in">
+    <h2>Vamos projetar<br /><span class="serif-accent">o seu espaço.</span></h2>
+    <div class="cta-btns">
+      <a href="/contato" class="pill pill--light cta-main">Solicitar orçamento</a>
+      <a href={whatsappLink('Olá, Cristiane! Gostaria de conversar sobre um projeto.')} class="cta-wa" target="_blank" rel="noopener">
+        Falar no WhatsApp ›
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    background: var(--green);
+    color: var(--bg);
+    padding: clamp(100px, 14vw, 180px) 24px;
+    text-align: center;
+  }
+  .cta-in {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(44px, 7vw, 96px);
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 0.98;
+  }
+  h2 .serif-accent { color: var(--salmao); }
+  .cta-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .cta-main { padding: 15px 28px; font-size: 16px; }
+  .cta-wa {
+    text-decoration: none;
+    color: var(--salmao);
+    padding: 15px 12px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .cta-wa:hover { color: var(--bg); }
+</style>

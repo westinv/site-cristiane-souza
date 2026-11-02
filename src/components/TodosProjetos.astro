@@ -1,0 +1,88 @@
+---
+import ProjetoCard from './ProjetoCard.astro';
+import { PROJETOS } from '../data/projetos';
+
+const FILTROS = ['Todos', 'Residencial', 'Comercial'] as const;
+---
+
+<section class="todos" aria-labelledby="todos-titulo">
+  <div data-rv class="todos-head">
+    <h2 id="todos-titulo">Todos os projetos.</h2>
+    <div class="seg" role="group" aria-label="Filtrar projetos por categoria" data-filtro>
+      {
+        FILTROS.map((f, i) => (
+          <button type="button" data-f={f} aria-pressed={i === 0 ? 'true' : 'false'}>
+            {f}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+  <div class="grid" data-grid>
+    {PROJETOS.map((p) => <ProjetoCard projeto={p} />)}
+  </div>
+</section>
+
+<style>
+  .todos {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: clamp(100px, 12vw, 160px) 24px clamp(80px, 10vw, 140px);
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .todos-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+  .seg {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: rgba(29, 35, 28, 0.05);
+    padding: 5px;
+    border-radius: var(--r-pill);
+  }
+  .seg button {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: var(--r-pill);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    transition: all .3s ease;
+  }
+  .seg button[aria-pressed='true'] { background: var(--green); color: var(--bg); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: 44px 24px;
+  }
+</style>
+
+<script>
+  const seg = document.querySelector<HTMLElement>('[data-filtro]');
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-grid] [data-cat]')];
+  seg?.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-f]');
+    if (!btn) return;
+    const f = btn.dataset.f;
+    seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    for (const c of cards) c.hidden = f !== 'Todos' && c.dataset.cat !== f;
+    document.dispatchEvent(new Event('reveal:refresh'));
+  });
+</script>

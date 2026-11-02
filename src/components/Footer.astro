@@ -1,0 +1,33 @@
+---
+import { SITE } from '../data/site';
+---
+
+<footer class="ft">
+  <div class="ft-in">
+    <span>{SITE.nomeCompleto} · {SITE.cau}</span>
+    <nav aria-label="Rodapé">
+      <a href="/#projetos">Projetos</a>
+      <a href="/#sobre">Sobre</a>
+      <a href="/contato">Contato</a>
+      <a href={SITE.areaRestrita}>Área restrita</a>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .ft { border-top: 1px solid rgba(29, 35, 28, 0.1); }
+  .ft-in {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 22px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 12px;
+    color: var(--gray-3);
+  }
+  nav { display: flex; gap: 20px; flex-wrap: wrap; }
+  a { text-decoration: none; }
+</style>

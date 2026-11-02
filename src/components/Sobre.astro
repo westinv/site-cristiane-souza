@@ -1,0 +1,63 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../assets/logo.png';
+import { SITE, SOBRE } from '../data/site';
+---
+
+<section id="sobre" class="sobre" aria-labelledby="sobre-titulo">
+  <div data-rv class="sobre-logo">
+    <Image src={logo} alt={SITE.nomeCompleto} widths={[400, 700]} sizes="(max-width: 800px) 70vw, 380px" />
+  </div>
+  <div data-rv class="sobre-text">
+    <span class="kicker">Sobre</span>
+    <h2 id="sobre-titulo">Arq. {SITE.nome}.</h2>
+    <p>{SOBRE.texto}</p>
+    <dl>
+      <div><dt>Registro</dt><dd>{SITE.cau}</dd></div>
+      <div><dt>Atuação</dt><dd>{SOBRE.atuacao}</dd></div>
+    </dl>
+  </div>
+</section>
+
+<style>
+  .sobre {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: clamp(100px, 14vw, 180px) 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+    gap: clamp(40px, 7vw, 100px);
+    align-items: center;
+  }
+  .sobre-logo {
+    background: var(--card);
+    border-radius: var(--r-block);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14%;
+    box-shadow: var(--shadow-card);
+  }
+  .sobre-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .sobre-text { display: flex; flex-direction: column; gap: 24px; }
+  .kicker { color: var(--terracota); }
+  h2 {
+    margin: 0;
+    font-size: clamp(40px, 5.4vw, 72px);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+  p {
+    margin: 0;
+    font-size: clamp(18px, 1.6vw, 21px);
+    line-height: 1.55;
+    color: var(--gray-1);
+    text-wrap: pretty;
+  }
+  dl { display: flex; gap: 48px; flex-wrap: wrap; padding-top: 8px; margin: 0; }
+  dt { font-size: 13px; color: var(--gray-4); }
+  dd { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+</style>

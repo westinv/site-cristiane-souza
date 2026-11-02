@@ -1,0 +1,125 @@
+---
+import { Image } from 'astro:assets';
+import { DESTAQUES } from '../data/projetos';
+---
+
+<div id="projetos" class="intro">
+  <div data-rv class="intro-row">
+    <h2>Projetos.</h2>
+    <p>Residenciais e comerciais, do conceito ao executivo.</p>
+  </div>
+</div>
+
+<div class="stack-wrap">
+  {
+    DESTAQUES.map((p) => (
+      <section class="stack" data-stack aria-label={p.nome}>
+        <div class="stack-inner" data-stack-inner>
+          <Image src={p.fotos[0]} alt={p.nome} widths={[828, 1280, 1920]} sizes="100vw" class="stack-img" />
+          <div class="stack-shade" aria-hidden="true" />
+          <div class="stack-foot">
+            <div class="stack-title">
+              <span class="kicker stack-cat">{p.categoria}</span>
+              <span class="stack-name">{p.nome}</span>
+            </div>
+            <a href={`/projetos/${p.id}`} class="pill pill--light stack-btn">Ver projeto</a>
+          </div>
+        </div>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .intro {
+    padding: 0 24px 56px;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .intro-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(40px, 6vw, 80px);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+  .intro p {
+    margin: 0;
+    font-size: 19px;
+    color: var(--gray-2);
+    max-width: 360px;
+    line-height: 1.45;
+  }
+
+  .stack {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background: var(--dark);
+  }
+  .stack-inner {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    transform-origin: 50% 30%;
+    will-change: transform, filter;
+  }
+  .stack-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .stack-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(17, 21, 16, 0.1) 30%, rgba(17, 21, 16, 0.78) 100%);
+  }
+  .stack-foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px clamp(48px, 8vh, 96px);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+    color: var(--bg);
+  }
+  .stack-title { display: flex; flex-direction: column; gap: 10px; }
+  .stack-cat { color: var(--rosa); }
+  .stack-name {
+    font-size: clamp(44px, 8vw, 112px);
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 0.95;
+  }
+  .stack-btn {
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stack { position: relative; }
+  }
+</style>
+
+<script>
+  import { initScrollFx } from '../scripts/scroll-fx';
+  initScrollFx();
+</script>

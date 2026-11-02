@@ -1,0 +1,237 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Lightbox from '../../components/Lightbox.astro';
+import { PROJETOS } from '../../data/projetos';
+
+export const getStaticPaths = (() =>
+  PROJETOS.map((projeto, i) => ({
+    params: { slug: projeto.id },
+    props: { projeto, proximo: PROJETOS[(i + 1) % PROJETOS.length] },
+  }))) satisfies GetStaticPaths;
+
+const { projeto: p, proximo } = Astro.props;
+const [capa, ...resto] = p.fotos;
+const cheia = (i: number) => i % 3 === 2 || resto.length === 1;
+---
+
+<Base title={p.nome} description={p.descricao} ogImage={capa}>
+  <div class="subbar">
+    <div class="subbar-in">
+      <span class="subbar-name">{p.nome}</span>
+      <div class="subbar-links">
+        <a href="/#projetos" class="subbar-all">Todos os projetos</a>
+        <a href="/contato" class="subbar-cta">Orçamento</a>
+      </div>
+    </div>
+  </div>
+
+  <section class="head">
+    <span data-rv class="kicker">{p.categoria}</span>
+    <h1 data-rv>{p.nome}</h1>
+    <p data-rv>{p.descricao}</p>
+  </section>
+
+  <section class="cover-wrap">
+    <button type="button" class="cover" data-lb-open="0" aria-label={`Ampliar foto 1 de ${p.fotos.length}`}>
+      <Image src={capa} alt={p.nome} widths={[828, 1400, 2000]} sizes="(max-width: 1440px) 100vw, 1400px" loading="eager" fetchpriority="high" />
+    </button>
+  </section>
+
+  {
+    resto.length > 0 && (
+      <section class="gallery">
+        {resto.map((src, i) => (
+          <button
+            type="button"
+            data-rv
+            data-lb-open={i + 1}
+            class:list={['shot', { 'shot--full': cheia(i) }]}
+            aria-label={`Ampliar foto ${i + 2} de ${p.fotos.length}`}
+          >
+            <Image
+              src={src}
+              alt={`${p.nome} — foto ${i + 2}`}
+              widths={cheia(i) ? [828, 1400, 2000] : [600, 1100]}
+              sizes={cheia(i) ? '(max-width: 1100px) 100vw, 1052px' : '(max-width: 900px) 100vw, 520px'}
+            />
+          </button>
+        ))}
+      </section>
+    )
+  }
+
+  <a href={`/projetos/${proximo.id}`} class="next">
+    <Image src={proximo.fotos[0]} alt="" widths={[828, 1400, 1920]} sizes="100vw" />
+    <div class="next-text">
+      <span class="kicker">Próximo projeto</span>
+      <span class="next-name">{proximo.nome}</span>
+    </div>
+  </a>
+
+  <Lightbox fotos={p.fotos} titulo={p.nome} />
+</Base>
+
+<style>
+  .subbar {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 40;
+    margin-top: var(--header-h);
+    background: rgba(247, 244, 239, 0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(29, 35, 28, 0.08);
+  }
+  .subbar-in {
+    max-width: 1100px;
+    margin: 0 auto;
+    height: 52px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .subbar-name {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .subbar-links { display: flex; align-items: center; gap: 18px; font-size: 12px; flex: none; }
+  .subbar-all { text-decoration: none; opacity: 0.8; }
+  .subbar-cta {
+    text-decoration: none;
+    background: var(--terracota);
+    color: #fff;
+    padding: 6px 13px;
+    border-radius: var(--r-pill);
+    font-weight: 600;
+    transition: background .3s ease;
+  }
+  .subbar-cta:hover { background: var(--green); color: #fff; }
+
+  .head {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: clamp(72px, 10vw, 130px) 24px clamp(48px, 6vw, 80px);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .head .kicker { color: var(--terracota); }
+  h1 {
+    margin: 0;
+    font-size: clamp(56px, 10vw, 140px);
+    font-weight: 700;
+    letter-spacing: -0.055em;
+    line-height: 0.92;
+    text-wrap: balance;
+  }
+  .head p {
+    margin: 8px 0 0;
+    font-size: clamp(19px, 1.8vw, 24px);
+    line-height: 1.45;
+    color: var(--gray-1);
+    max-width: 720px;
+    text-wrap: balance;
+  }
+
+  :where(.cover, .shot) { all: unset; }
+  .cover, .shot {
+    cursor: zoom-in;
+    display: block;
+    overflow: hidden;
+    background: var(--placeholder);
+  }
+  .cover:focus-visible, .shot:focus-visible {
+    outline: 2px solid var(--terracota);
+    outline-offset: 4px;
+  }
+
+  .cover-wrap { padding: 0 clamp(12px, 2vw, 24px); }
+  .cover {
+    max-width: 1400px;
+    margin: 0 auto;
+    border-radius: var(--r-block);
+  }
+  .cover img {
+    width: 100%;
+    height: min(86vh, 900px);
+    object-fit: cover;
+    animation: cover-in 1.6s var(--ease) backwards;
+  }
+  @keyframes cover-in { from { opacity: 0; transform: scale(1.06); } }
+
+  .gallery {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: clamp(56px, 7vw, 96px) 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    gap: 20px;
+  }
+  .shot { border-radius: var(--r-gallery); }
+  .shot img {
+    width: 100%;
+    height: 100%;
+    max-height: 70vh;
+    object-fit: cover;
+    transition: transform 1.2s var(--ease);
+  }
+  .shot--full { grid-column: 1 / -1; }
+  .shot--full img { max-height: 80vh; }
+  .shot:hover img { transform: scale(1.025); }
+
+  .next {
+    display: block;
+    position: relative;
+    height: 70vh;
+    min-height: 420px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--bg);
+    background: var(--dark);
+  }
+  .next:hover { color: var(--bg); }
+  .next img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.55;
+    transition: transform 1.4s var(--ease);
+  }
+  .next:hover img { transform: scale(1.04); }
+  .next-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+    padding: 24px;
+  }
+  .next-text .kicker { color: var(--rosa); }
+  .next-name {
+    font-size: clamp(48px, 8vw, 112px);
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 0.95;
+  }
+
+  @media (max-width: 480px) {
+    .subbar-all { display: none; }
+  }
+</style>

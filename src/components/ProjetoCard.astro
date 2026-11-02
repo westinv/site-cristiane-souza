@@ -1,0 +1,62 @@
+---
+import { Image } from 'astro:assets';
+import { contagemFotos, type Projeto } from '../data/projetos';
+
+interface Props {
+  projeto: Projeto;
+}
+
+const { projeto: p } = Astro.props;
+---
+
+<a data-rv data-cat={p.categoria} href={`/projetos/${p.id}`} class="card">
+  <div class="card-img">
+    <Image src={p.fotos[0]} alt={p.nome} widths={[400, 680, 1000]} sizes="(max-width: 760px) 100vw, (max-width: 1200px) 50vw, 380px" />
+  </div>
+  <div class="card-row">
+    <span class="card-name">{p.nome}</span>
+    <span class="card-count">{contagemFotos(p)}</span>
+  </div>
+  <span class="kicker card-cat">{p.categoria}</span>
+</a>
+
+<style>
+  .card {
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card:hover { color: var(--text); }
+  .card[hidden] { display: none; }
+  .card-img {
+    aspect-ratio: 4 / 5;
+    border-radius: var(--r-card);
+    overflow: hidden;
+    background: var(--placeholder);
+  }
+  .card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s var(--ease);
+  }
+  .card:hover .card-img img { transform: scale(1.04); }
+  .card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 0 4px;
+  }
+  .card-name { font-size: 24px; font-weight: 700; letter-spacing: -0.035em; }
+  .card-count { font-size: 13px; color: var(--gray-4); white-space: nowrap; }
+  .card-cat {
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    color: var(--terracota);
+    margin-top: -10px;
+    padding: 0 4px;
+  }
+</style>
