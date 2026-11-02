@@ -28,16 +28,16 @@ npm run preview   # serve o dist/ gerado
 um item em `PROJETOS`. A página `/projetos/<id>` é criada sozinha; as imagens são convertidas para
 WebP responsivo no build.
 
-## Deploy (Cloudflare Workers, grátis)
+## Deploy (Cloudflare Pages, grátis)
 
-No ar em https://site-cristiane-souza.simone-salgados.workers.dev
+No ar em https://cristianesouza.pages.dev
 
-O Worker `site-cristiane-souza` está ligado a este repositório: cada push na `main` publica de novo.
-A Cloudflare roda `npx wrangler deploy`, que pelo `wrangler.jsonc` executa `npm run build` e
-publica a pasta `dist` como assets estáticos (com a `404.html` como página de erro).
+O projeto `cristianesouza` do Cloudflare Pages está ligado a este repositório: cada push na
+`main` publica de novo. Configuração de build no painel: preset **Astro**, comando
+`npm run build`, saída `dist` (a versão do Node vem do `.nvmrc`).
 
-Domínio próprio: no Worker, aba **Domains → Add custom domain**. Depois, troque a URL em
-`SITE_URL` (`astro.config.mjs`) e na linha `Sitemap:` de `public/robots.txt`.
+Domínio próprio: no projeto do Pages, **Custom domains → Set up a custom domain**. Depois,
+troque a URL em `SITE_URL` (`astro.config.mjs`) e na linha `Sitemap:` de `public/robots.txt`.
 
 ## Pendências de conteúdo
 
