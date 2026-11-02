@@ -28,18 +28,16 @@ npm run preview   # serve o dist/ gerado
 um item em `PROJETOS`. A página `/projetos/<id>` é criada sozinha; as imagens são convertidas para
 WebP responsivo no build.
 
-## Deploy no Cloudflare Pages (grátis)
+## Deploy (Cloudflare Workers, grátis)
 
-1. Suba este repositório para o GitHub.
-2. No painel da Cloudflare: **Workers & Pages → Create → Pages → Connect to Git** e escolha o repositório.
-3. Configuração de build:
-   - Framework preset: **Astro**
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-   - Variável de ambiente: `NODE_VERSION = 20`
-4. Deploy. O site fica em `https://<projeto>.pages.dev`; cada push na `main` publica de novo.
-5. Domínio próprio (opcional): **Custom domains → Set up a domain** e siga as instruções de DNS.
-6. Atualize `SITE_URL` em `astro.config.mjs` e a linha `Sitemap:` em `public/robots.txt` com a URL final.
+No ar em https://site-cristiane-souza.simone-salgados.workers.dev
+
+O Worker `site-cristiane-souza` está ligado a este repositório: cada push na `main` publica de novo.
+A Cloudflare roda `npx wrangler deploy`, que pelo `wrangler.jsonc` executa `npm run build` e
+publica a pasta `dist` como assets estáticos (com a `404.html` como página de erro).
+
+Domínio próprio: no Worker, aba **Domains → Add custom domain**. Depois, troque a URL em
+`SITE_URL` (`astro.config.mjs`) e na linha `Sitemap:` de `public/robots.txt`.
 
 ## Pendências de conteúdo
 
