@@ -1,0 +1,129 @@
+---
+import App from '../../layouts/App.astro';
+import Ico from '../../components/app/Ico.astro';
+import FormDialog from '../../components/app/FormDialog.astro';
+import Excluir from '../../components/app/Excluir.astro';
+import { listarFornecedores, listarServicos } from '../../lib/db';
+import { forms } from '../../lib/forms';
+import { processarCrud, destinoCrud } from '../../lib/acoes';
+
+export const prerender = false;
+
+const db = Astro.locals.runtime.env.DB;
+const defServico = forms.servico();
+const defFornecedor = forms.fornecedor();
+
+if (Astro.request.method === 'POST') {
+  const r = await processarCrud(db, await Astro.request.formData(), [defServico, defFornecedor]);
+  return Astro.redirect(destinoCrud(Astro.url, r), 303);
+}
+
+const aba = Astro.url.searchParams.get('aba') === 'fornecedores' ? 'fornecedores' : 'servicos';
+const ehServicos = aba === 'servicos';
+const [servicos, fornecedores] = await Promise.all([
+  ehServicos ? listarServicos(db) : Promise.resolve([]),
+  ehServicos ? Promise.resolve([]) : listarFornecedores(db),
+]);
+const total = ehServicos ? servicos.length : fornecedores.length;
+---
+
+<App title="Catálogo" ativo="cat">
+  <div class="page-head">
+    <div>
+      <h1>Catálogo</h1>
+      <p class="sub">Serviços que o estúdio oferece e fornecedores parceiros</p>
+    </div>
+    {
+      ehServicos ? (
+        <button type="button" class="btn btn-primary" data-abrir="dlg-servico" data-novo><Ico name="plus" />Novo serviço</button>
+      ) : (
+        <button type="button" class="btn btn-primary" data-abrir="dlg-fornecedor" data-novo><Ico name="plus" />Novo fornecedor</button>
+      )
+    }
+  </div>
+
+  <div class="row" data-filtro="catalogo">
+    <nav class="seg" aria-label="Aba">
+      <a href="/app/catalogo" class:list={['seg-opt', { on: ehServicos }]} aria-current={ehServicos ? 'page' : undefined}>Serviços</a>
+      <a href="/app/catalogo?aba=fornecedores" class:list={['seg-opt', { on: !ehServicos }]} aria-current={!ehServicos ? 'page' : undefined}>Fornecedores</a>
+    </nav>
+    <div class="field grow">
+      <label for="busca" class="sr-only">Buscar</label>
+      <input id="busca" class="input" placeholder="Buscar..." data-busca />
+    </div>
+  </div>
+
+  <div class="card" style="opacity:0.8" data-vazio="catalogo" hidden={total > 0}>Nada encontrado.</div>
+
+  {
+    ehServicos ? (
+      <div class="grid grid-240" data-lista="catalogo">
+        {servicos.map((s) => (
+          <div class="card hover-up" data-item-texto={[s.categoria, s.nome, s.descricao, s.preco].join(' ')}>
+            <span class="tag tag-accent-2">{s.categoria}</span>
+            <div class="card-title">{s.nome}</div>
+            <div class="card-body">{s.descricao}</div>
+            <div class="card-top" style="margin-top:4px">
+              <span style="font-size:18px;font-weight:700;letter-spacing:-0.03em">{s.preco}</span>
+              <div style="display:flex;gap:6px">
+                <button
+                  type="button"
+                  class="btn btn-icon btn-secondary"
+                  title="Editar"
+                  aria-label="Editar"
+                  data-abrir="dlg-servico"
+                  data-titulo="Editar serviço"
+                  data-item={JSON.stringify(s)}
+                >
+                  <Ico name="pencil" size={14} />
+                </button>
+                <Excluir form="servico" id={s.id} pergunta={`Excluir o serviço "${s.nome}"?`} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="card tabela-wrap" style="padding:8px" hidden={total === 0}>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Fornecedor</th>
+              <th>Categoria</th>
+              <th>Contato</th>
+              <th>Cidade</th>
+              <th><span class="sr-only">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody data-lista="catalogo">
+            {fornecedores.map((f) => (
+              <tr data-item-texto={[f.nome, f.categoria, f.contato, f.cidade].join(' ')}>
+                <td style="font-weight:600">{f.nome}</td>
+                <td>{f.categoria && <span class="tag tag-accent">{f.categoria}</span>}</td>
+                <td>{f.contato}</td>
+                <td>{f.cidade}</td>
+                <td class="dir">
+                  <button
+                    type="button"
+                    class="btn btn-icon btn-ghost"
+                    title="Editar"
+                    aria-label="Editar"
+                    data-abrir="dlg-fornecedor"
+                    data-titulo="Editar fornecedor"
+                    data-item={JSON.stringify(f)}
+                  >
+                    <Ico name="pencil" size={14} />
+                  </button>
+                  <Excluir form="fornecedor" id={f.id} classe="btn btn-icon btn-ghost" pergunta={`Excluir o fornecedor "${f.nome}"?`} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  <FormDialog id="dlg-servico" def={defServico} titulo="Novo serviço" />
+  <FormDialog id="dlg-fornecedor" def={defFornecedor} titulo="Novo fornecedor" />
+</App>

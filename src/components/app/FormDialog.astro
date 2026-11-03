@@ -1,0 +1,63 @@
+---
+import type { FormDef } from '../../lib/forms';
+
+interface Props {
+  id: string;
+  def: FormDef;
+  titulo: string;
+  ocultos?: Record<string, string>;
+}
+
+const { id, def, titulo, ocultos = {} } = Astro.props;
+---
+
+<dialog id={id} class="dialog" data-titulo-novo={titulo}>
+  <form method="post" class="dialog-form" novalidate>
+    <input type="hidden" name="_form" value={def.nome} />
+    <input type="hidden" name="_acao" value="salvar" />
+    <input type="hidden" name="id" value="" />
+    {Object.entries(ocultos).map(([k, v]) => <input type="hidden" name={k} value={v} />)}
+    <div class="dialog-title" data-titulo>{titulo}</div>
+    <div class="dialog-body">
+      {
+        def.campos.map((c) => (
+          <div class="field">
+            <label for={`${id}-${c.key}`}>{c.label}</label>
+            {c.type === 'select' ? (
+              <select id={`${id}-${c.key}`} name={c.key} class="input" data-label={c.label} data-required={c.required ? '' : undefined}>
+                {(c.options ?? []).map((o) => (
+                  <option value={o.value} selected={o.value === def.defaults[c.key]}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div class:list={[c.prefixo && 'com-prefixo']}>
+                {c.prefixo && <span class="prefixo" aria-hidden="true">{c.prefixo}</span>}
+                <input
+                  id={`${id}-${c.key}`}
+                  name={c.key}
+                  class="input"
+                  type={c.type ?? 'text'}
+                  step={c.type === 'number' ? '0.01' : undefined}
+                  min={c.type === 'number' ? '0' : undefined}
+                  inputmode={c.type === 'number' ? 'decimal' : undefined}
+                  placeholder={c.placeholder}
+                  value={def.defaults[c.key] ?? ''}
+                  data-label={c.label}
+                  data-required={c.required ? '' : undefined}
+                  data-prefixo={c.prefixo}
+                />
+              </div>
+            )}
+          </div>
+        ))
+      }
+      <p class="erro" data-erro hidden></p>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-fechar>Cancelar</button>
+      <button type="submit" class="btn btn-primary">Salvar</button>
+    </div>
+  </form>
+</dialog>

@@ -1,0 +1,63 @@
+---
+import ArrowLeft from '@lucide/astro/icons/arrow-left';
+import BookOpen from '@lucide/astro/icons/book-open';
+import Check from '@lucide/astro/icons/check';
+import CheckCheck from '@lucide/astro/icons/check-check';
+import ChevronLeft from '@lucide/astro/icons/chevron-left';
+import ChevronRight from '@lucide/astro/icons/chevron-right';
+import Eye from '@lucide/astro/icons/eye';
+import FileText from '@lucide/astro/icons/file-text';
+import FolderPlus from '@lucide/astro/icons/folder-plus';
+import Hammer from '@lucide/astro/icons/hammer';
+import Kanban from '@lucide/astro/icons/kanban';
+import LayoutDashboard from '@lucide/astro/icons/layout-dashboard';
+import LogOut from '@lucide/astro/icons/log-out';
+import Mail from '@lucide/astro/icons/mail';
+import MapPin from '@lucide/astro/icons/map-pin';
+import Pencil from '@lucide/astro/icons/pencil';
+import Phone from '@lucide/astro/icons/phone';
+import Plus from '@lucide/astro/icons/plus';
+import Settings from '@lucide/astro/icons/settings';
+import Trash2 from '@lucide/astro/icons/trash';
+import Users from '@lucide/astro/icons/users';
+import Wallet from '@lucide/astro/icons/wallet';
+import X from '@lucide/astro/icons/x';
+
+const ICONES = {
+  'arrow-left': ArrowLeft,
+  'book-open': BookOpen,
+  check: Check,
+  'check-check': CheckCheck,
+  'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
+  eye: Eye,
+  'file-text': FileText,
+  'folder-plus': FolderPlus,
+  hammer: Hammer,
+  kanban: Kanban,
+  'layout-dashboard': LayoutDashboard,
+  'log-out': LogOut,
+  mail: Mail,
+  'map-pin': MapPin,
+  pencil: Pencil,
+  phone: Phone,
+  plus: Plus,
+  settings: Settings,
+  'trash-2': Trash2,
+  users: Users,
+  wallet: Wallet,
+  x: X,
+} as const;
+
+export type NomeIcone = keyof typeof ICONES;
+
+interface Props {
+  name: NomeIcone;
+  size?: number;
+}
+
+const { name, size = 16 } = Astro.props;
+const Componente = ICONES[name];
+---
+
+<Componente size={size} stroke-width={2.75} aria-hidden="true" />

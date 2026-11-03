@@ -1,0 +1,72 @@
+---
+import App from '../../layouts/App.astro';
+import Ico from '../../components/app/Ico.astro';
+import { obterConfig, resumoDashboard, tarefasFazendo } from '../../lib/db';
+import { brl } from '../../lib/format';
+
+export const prerender = false;
+
+const db = Astro.locals.runtime.env.DB;
+const [config, resumo, tarefas] = await Promise.all([obterConfig(db), resumoDashboard(db), tarefasFazendo(db)]);
+const nome = (config.responsavel || Astro.locals.usuario?.nome || '').split(' ')[0];
+---
+
+<App title="Dashboard" ativo="dash">
+  <div>
+    <h1 style="margin-bottom:6px">Olá, {nome}</h1>
+    <p class="sub">Aqui está o resumo do seu estúdio hoje.</p>
+  </div>
+
+  <div class="grid grid-180">
+    <a href="/app/clientes" class="card" style="gap:6px">
+      <div class="ico-redondo"><Ico name="users" size={18} /></div>
+      <div class="num">{resumo.clientes}</div>
+      <div class="sub" style="font-size:13px">clientes ativos</div>
+    </a>
+    <a href="/app/projetos" class="card" style="gap:6px">
+      <div class="ico-redondo verde"><Ico name="kanban" size={18} /></div>
+      <div class="num">{resumo.projetos}</div>
+      <div class="sub" style="font-size:13px">projetos em andamento</div>
+    </a>
+    <a href="/app/obras" class="card" style="gap:6px">
+      <div class="ico-redondo"><Ico name="hammer" size={18} /></div>
+      <div class="num">{resumo.obras}</div>
+      <div class="sub" style="font-size:13px">obras em andamento</div>
+    </a>
+    <a href="/app/projetos" class="card" style="gap:6px">
+      <div class="ico-redondo verde"><Ico name="wallet" size={18} /></div>
+      <div class="num">{brl(resumo.valor)}</div>
+      <div class="sub" style="font-size:13px">em projetos em andamento</div>
+    </a>
+  </div>
+
+  <div class="card" style="gap:14px">
+    <div>
+      <div class="card-title">Tarefas em andamento</div>
+      <div class="sub" style="font-size:13px">Coluna "Fazendo" de todos os projetos</div>
+    </div>
+    {tarefas.length === 0 && <div class="vazio">Nenhuma tarefa em andamento.</div>}
+    <div style="display:flex;flex-direction:column;gap:8px">
+      {
+        tarefas.map((t) => (
+          <a
+            href={`/app/projetos/${t.projeto_id}`}
+            style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px;border-radius:var(--radius-md);background:var(--color-bg);text-decoration:none;color:inherit"
+          >
+            <span style="font-size:14px;font-weight:600">{t.titulo}</span>
+            <span style="font-size:12px;opacity:0.7">{t.projeto_nome}</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="card" style="gap:14px">
+    <div class="card-title">Ações rápidas</div>
+    <div class="row">
+      <a href="/app/clientes?novo=1" class="btn btn-primary"><Ico name="plus" />Novo cliente</a>
+      <a href="/app/projetos?novo=1" class="btn btn-secondary"><Ico name="folder-plus" />Novo projeto</a>
+      <a href="/app/obras?novo=1" class="btn btn-secondary"><Ico name="hammer" />Nova obra</a>
+    </div>
+  </div>
+</App>

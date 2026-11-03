@@ -1,44 +1,55 @@
 ---
-import Base from '../layouts/Base.astro';
+import { Image } from 'astro:assets';
+import App from '../layouts/App.astro';
+import logoMark from '../assets/logo-mark.png';
+import { autenticar, criarSessao } from '../lib/auth';
+
+export const prerender = false;
+
+let erro = '';
+let email = '';
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  email = String(fd.get('email') ?? '').trim().slice(0, 200);
+  const senha = String(fd.get('senha') ?? '').slice(0, 500);
+  if (!email || !senha) {
+    erro = 'Informe email e senha.';
+  } else {
+    const db = Astro.locals.runtime.env.DB;
+    const usuario = await autenticar(db, email, senha);
+    if (usuario) {
+      await criarSessao(db, Astro.cookies, usuario.id, Astro.url.protocol === 'https:');
+      return Astro.redirect('/app', 303);
+    }
+    erro = 'Email ou senha inválidos.';
+  }
+  Astro.response.status = 400;
+}
 ---
 
-<Base title="Área restrita" noindex>
-  <section class="restrita">
-    <span data-rv class="kicker">Área restrita</span>
-    <h1 data-rv>Em breve<br /><span class="serif-accent">por aqui.</span></h1>
-    <p data-rv>
-      Este espaço vai reunir contratos, documentos e o andamento de cada projeto. Enquanto isso, fale com a gente pelo contato.
-    </p>
-    <div data-rv class="btns">
-      <a href="/contato" class="pill pill--dark">Entrar em contato</a>
-      <a href="/" class="voltar">Voltar ao início ›</a>
-    </div>
-  </section>
-</Base>
-
-<style>
-  .restrita {
-    max-width: 820px;
-    width: 100%;
-    margin: 0 auto;
-    padding: clamp(160px, 18vw, 220px) 24px clamp(100px, 12vw, 160px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 24px;
-  }
-  .kicker { color: var(--terracota); }
-  h1 {
-    margin: 0;
-    font-size: clamp(48px, 8vw, 104px);
-    font-weight: 700;
-    letter-spacing: -0.05em;
-    line-height: 0.96;
-  }
-  h1 .serif-accent { color: var(--terracota); }
-  p { margin: 0; font-size: clamp(18px, 1.6vw, 21px); line-height: 1.55; color: var(--gray-1); max-width: 560px; }
-  .btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 8px; }
-  .pill { padding: 15px 28px; font-size: 16px; }
-  .voltar { text-decoration: none; font-weight: 600; font-size: 16px; padding: 15px 12px; }
-</style>
+<App title="Entrar" solo>
+  <div class="login">
+    <form method="post" class="card" novalidate>
+      <div style="display:flex;align-items:center;gap:10px">
+        <Image src={logoMark} alt="" height={88} style="height:44px;width:auto" />
+        <span class="sb-name" style="font-size:24px">Cristiane Souza</span>
+      </div>
+      <div>
+        <h1>Entrar</h1>
+        <p class="sub">Acesse a gestão do seu estúdio</p>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" class="input" type="email" autocomplete="username" value={email} autofocus={!email} />
+      </div>
+      <div class="field">
+        <label for="senha">Senha</label>
+        <input id="senha" name="senha" class="input" type="password" autocomplete="current-password" autofocus={!!email} />
+      </div>
+      {erro && <div class="erro" role="alert">{erro}</div>}
+      <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+      <a href="/" class="voltar" style="align-self:center">‹ Voltar ao site</a>
+    </form>
+  </div>
+</App>

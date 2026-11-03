@@ -1,0 +1,78 @@
+---
+import App from '../../../layouts/App.astro';
+import Ico from '../../../components/app/Ico.astro';
+import FormDialog from '../../../components/app/FormDialog.astro';
+import Excluir from '../../../components/app/Excluir.astro';
+import { listarClientes, type Cliente } from '../../../lib/db';
+import { forms } from '../../../lib/forms';
+import { processarCrud, destinoCrud } from '../../../lib/acoes';
+
+export const prerender = false;
+
+const db = Astro.locals.runtime.env.DB;
+const def = forms.cliente();
+
+if (Astro.request.method === 'POST') {
+  const r = await processarCrud(db, await Astro.request.formData(), [def]);
+  return Astro.redirect(destinoCrud(Astro.url, r), 303);
+}
+
+const clientes = await listarClientes(db);
+const dadosForm = (c: Cliente) =>
+  JSON.stringify(Object.fromEntries([['id', c.id], ...def.campos.map((f) => [f.key, c[f.key as keyof Cliente]])]));
+---
+
+<App title="Clientes" ativo="cli">
+  <div class="page-head">
+    <div>
+      <h1>Clientes</h1>
+      <p class="sub">Pessoas físicas e jurídicas do estúdio</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-abrir="dlg-cliente" data-novo><Ico name="plus" />Novo cliente</button>
+  </div>
+
+  <div class="row" data-filtro="clientes">
+    <div class="field grow">
+      <label for="busca" class="sr-only">Buscar</label>
+      <input id="busca" class="input" placeholder="Buscar por nome, email ou telefone..." data-busca />
+    </div>
+    <div class="seg" role="radiogroup" aria-label="Tipo">
+      {
+        ['Todos', 'Física', 'Jurídica'].map((t, i) => (
+          <label class="seg-opt">
+            <input type="radio" name="fcli" value={t} checked={i === 0} data-grupo />
+            <span>{t}</span>
+          </label>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="card" style="opacity:0.8" data-vazio="clientes" hidden={clientes.length > 0}>Nenhum cliente encontrado.</div>
+
+  <div class="grid grid-260" data-lista="clientes">
+    {
+      clientes.map((c) => (
+        <div class="card hover-up" data-item-texto={[c.nome, c.email, c.telefone].join(' ')} data-item-grupo={c.tipo}>
+          <div class="card-top">
+            <span class="tag tag-accent-2">{c.tipo}</span>
+            <span class:list={['tag', c.status === 'Ativo' ? 'tag-accent' : 'tag-outline']}>{c.status}</span>
+          </div>
+          <div class="card-title">{c.nome}</div>
+          {c.email && <div class="card-meta"><Ico name="mail" size={13} />{c.email}</div>}
+          {c.telefone && <div class="card-meta"><Ico name="phone" size={13} />{c.telefone}</div>}
+          {c.cidade && <div class="card-meta"><Ico name="map-pin" size={13} />{c.cidade}</div>}
+          <div class="acoes">
+            <a href={`/app/clientes/${c.id}`} class="btn btn-secondary btn-sm"><Ico name="eye" size={14} />Ver</a>
+            <button type="button" class="btn btn-secondary btn-sm" data-abrir="dlg-cliente" data-titulo="Editar cliente" data-item={dadosForm(c)}>
+              <Ico name="pencil" size={14} />Editar
+            </button>
+            <Excluir form="cliente" id={c.id} pergunta={`Excluir o cliente "${c.nome}"? Projetos e obras dele ficam sem cliente.`} />
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <FormDialog id="dlg-cliente" def={def} titulo="Novo cliente" />
+</App>

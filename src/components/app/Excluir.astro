@@ -1,0 +1,22 @@
+---
+import Ico from './Ico.astro';
+
+interface Props {
+  form: string;
+  id: string;
+  pergunta: string;
+  titulo?: string;
+  classe?: string;
+  icone?: 'trash-2' | 'x';
+  action?: string;
+}
+
+const { form, id, pergunta, titulo = 'Excluir', classe = 'btn btn-icon btn-secondary', icone = 'trash-2', action } = Astro.props;
+---
+
+<form method="post" class="inline" data-confirm={pergunta} action={action}>
+  <input type="hidden" name="_form" value={form} />
+  <input type="hidden" name="_acao" value="excluir" />
+  <input type="hidden" name="id" value={id} />
+  <button type="submit" class={classe} title={titulo} aria-label={titulo}><Ico name={icone} size={14} /></button>
+</form>

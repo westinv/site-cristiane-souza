@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cristianesouza",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cristiane-db",
+      "database_id": "a221264d-6260-43e3-82fd-c557bffd547a",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+---
+import App from '../../../layouts/App.astro';
+import Ico from '../../../components/app/Ico.astro';
+import FormDialog from '../../../components/app/FormDialog.astro';
+import Excluir from '../../../components/app/Excluir.astro';
+import { listarProjetos, nomesClientes, SEM_CLIENTE } from '../../../lib/db';
+import { forms, STATUS_PROJETO } from '../../../lib/forms';
+import { processarCrud, destinoCrud } from '../../../lib/acoes';
+import { brl, tagStatus } from '../../../lib/format';
+
+export const prerender = false;
+
+const db = Astro.locals.runtime.env.DB;
+const clientes = await nomesClientes(db);
+const def = forms.projeto(clientes);
+
+if (Astro.request.method === 'POST') {
+  const r = await processarCrud(db, await Astro.request.formData(), [def]);
+  return Astro.redirect(destinoCrud(Astro.url, r), 303);
+}
+
+const projetos = await listarProjetos(db);
+---
+
+<App title="Projetos" ativo="proj">
+  <div class="page-head">
+    <div>
+      <h1>Projetos</h1>
+      <p class="sub">Board por status, com progresso de tarefas</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-abrir="dlg-projeto" data-novo><Ico name="plus" />Novo projeto</button>
+  </div>
+
+  {clientes.length === 0 && <div class="alerta">Cadastre um cliente antes de criar projetos. <a href="/app/clientes?novo=1">Novo cliente ›</a></div>}
+
+  <div class="row" data-filtro="projetos">
+    <div class="field grow">
+      <label for="busca" class="sr-only">Buscar</label>
+      <input id="busca" class="input" placeholder="Buscar por nome do projeto ou cliente..." data-busca />
+    </div>
+    <div class="seg" role="radiogroup" aria-label="Status">
+      {
+        ['Todos', ...STATUS_PROJETO].map((s, i) => (
+          <label class="seg-opt">
+            <input type="radio" name="fproj" value={s} checked={i === 0} data-grupo />
+            <span>{s}</span>
+          </label>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="card" style="opacity:0.8" data-vazio="projetos" hidden={projetos.length > 0}>Nenhum projeto encontrado.</div>
+
+  <div class="grid grid-260" data-lista="projetos">
+    {
+      projetos.map((p) => (
+        <div class="card hover-up" data-item-texto={`${p.nome} ${p.cliente_nome ?? ''}`} data-item-grupo={p.status}>
+          <span class:list={['tag', tagStatus(p.status)]}>{p.status}</span>
+          <div class="card-title">{p.nome}</div>
+          <div class="card-body">{p.cliente_nome ?? SEM_CLIENTE}</div>
+          <div class="card-meta"><Ico name="check-check" size={13} />Tarefas: {p.feitas}/{p.total} concluídas</div>
+          <div class="card-meta"><Ico name="wallet" size={13} />Valor: {brl(p.valor)}</div>
+          <div class="acoes">
+            <a href={`/app/projetos/${p.id}`} class="btn btn-secondary btn-sm"><Ico name="kanban" size={14} />Board</a>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              data-abrir="dlg-projeto"
+              data-titulo="Editar projeto"
+              data-item={JSON.stringify({ id: p.id, nome: p.nome, cliente_id: p.cliente_id ?? '', status: p.status, valor: p.valor })}
+            >
+              <Ico name="pencil" size={14} />Editar
+            </button>
+            <Excluir form="projeto" id={p.id} pergunta={`Excluir o projeto "${p.nome}" e todas as tarefas dele?`} />
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <FormDialog id="dlg-projeto" def={def} titulo="Novo projeto" />
+</App>

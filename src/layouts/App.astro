@@ -1,0 +1,55 @@
+---
+import { getImage } from 'astro:assets';
+import Sidebar, { type Secao } from '../components/app/Sidebar.astro';
+import logoMark from '../assets/logo-mark.png';
+import { obterConfig } from '../lib/db';
+import '../styles/app.css';
+
+interface Props {
+  title: string;
+  ativo?: Secao;
+  solo?: boolean;
+}
+
+const { title, ativo = 'dash', solo = false } = Astro.props;
+const config = solo ? null : await obterConfig(Astro.locals.runtime.env.DB);
+const favicon = await getImage({ src: logoMark, width: 64, height: 64, format: 'png' });
+const erro = Astro.url.searchParams.get('erro');
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#f7f4ef" />
+    <title>{title} — Cristiane Souza</title>
+    <link rel="icon" type="image/png" href={favicon.src} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Manrope:wght@400;500;600;700&display=swap"
+    />
+  </head>
+  <body>
+    {
+      solo ? (
+        <slot />
+      ) : (
+        <div class="app">
+          <Sidebar ativo={ativo} responsavel={config!.responsavel} estudio={config!.estudio} />
+          <main class="main">
+            {erro && <div class="alerta" role="alert">{erro}</div>}
+            <slot />
+          </main>
+        </div>
+      )
+    }
+  </body>
+</html>
+
+<script>
+  import { initApp } from '../scripts/app';
+  initApp();
+</script>

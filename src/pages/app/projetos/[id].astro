@@ -1,0 +1,134 @@
+---
+import App from '../../../layouts/App.astro';
+import Ico from '../../../components/app/Ico.astro';
+import Excluir from '../../../components/app/Excluir.astro';
+import { adicionarTarefa, excluir, listarProjetos, tarefasDoProjeto, SEM_CLIENTE } from '../../../lib/db';
+import { voltar } from '../../../lib/acoes';
+import { dataCurta, tagStatus } from '../../../lib/format';
+
+export const prerender = false;
+
+const db = Astro.locals.runtime.env.DB;
+const id = Astro.params.id!;
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  const acao = fd.get('_acao');
+  const tarefaId = String(fd.get('id') ?? '');
+  const col = Number(fd.get('col'));
+  const colValida = col === 0 || col === 1 || col === 2;
+  let erro: string | null = null;
+
+  if (acao === 'adicionar') {
+    const titulo = String(fd.get('titulo') ?? '').trim();
+    const prazo = String(fd.get('prazo') ?? '');
+    if (!titulo) erro = 'Preencha: Tarefa';
+    else if (colValida) await adicionarTarefa(db, id, titulo, /^\d{4}-\d{2}-\d{2}$/.test(prazo) ? prazo : '', col);
+  } else if (acao === 'excluir' && tarefaId) {
+    await excluir(db, 'tarefas', tarefaId);
+  }
+  return Astro.redirect(voltar(Astro.url, erro ? { erro } : {}) + (colValida ? `#col-${col}` : ''), 303);
+}
+
+const projetos = await listarProjetos(db);
+const p = projetos.find((x) => x.id === id);
+const tarefas = p ? await tarefasDoProjeto(db, id) : [];
+const COLUNAS = ['A fazer', 'Fazendo', 'Feito'];
+if (!p) Astro.response.status = 404;
+---
+
+<App title={p ? `${p.nome} · Quadro` : 'Projeto'} ativo="proj">
+  <a href="/app/projetos" class="voltar"><Ico name="arrow-left" size={14} />Projetos</a>
+  {
+    !p ? (
+      <div class="card" style="opacity:0.8">Projeto não encontrado.</div>
+    ) : (
+      <>
+        <div class="page-head">
+          <div>
+            <h1>{p.nome}</h1>
+            <p class="sub">
+              {p.cliente_nome ?? SEM_CLIENTE} · <span data-feitas>{p.feitas}</span>/{p.total} tarefas concluídas
+            </p>
+          </div>
+          <div class="row" style="gap:10px;flex-wrap:wrap">
+            <span class:list={['tag', tagStatus(p.status)]} style="align-self:center">{p.status}</span>
+            <label class="sr-only" for="trocar">Trocar de projeto</label>
+            <select id="trocar" class="input" style="width:auto" data-ir>
+              {projetos.map((x) => (
+                <option value={`/app/projetos/${x.id}`} selected={x.id === p.id}>
+                  {x.nome}
+                </option>
+              ))}
+            </select>
+            <button type="button" class="btn btn-primary" data-abrir="dlg-tarefa" data-novo>
+              <Ico name="plus" />Nova tarefa
+            </button>
+          </div>
+        </div>
+
+        <div class="quadro" data-quadro={`/api/projetos/${p.id}/tarefas/`}>
+          {COLUNAS.map((titulo, i) => {
+            const lista = tarefas.filter((t) => t.col === i);
+            return (
+              <section class="coluna" id={`col-${i}`} data-col={i} aria-label={titulo}>
+                <div class="coluna-head">
+                  <span>{titulo}</span>
+                  <span class="tag tag-neutral" data-contagem>{lista.length}</span>
+                </div>
+                <div class="coluna-lista" data-lista-col>
+                  {lista.map((t) => (
+                    <div class="tarefa" draggable="true" data-tarefa={t.id} data-ordem={tarefas.indexOf(t)}>
+                      <div class="tarefa-titulo">{t.titulo}</div>
+                      <div class="tarefa-rodape">
+                        <span class="prazo">{t.prazo ? `Prazo ${dataCurta(t.prazo)}` : 'Sem prazo'}</span>
+                        <div class="tarefa-acoes">
+                          <button type="button" class="btn btn-icon btn-ghost" data-mover="-1" title="Voltar uma coluna" aria-label="Voltar uma coluna">
+                            <Ico name="chevron-left" size={14} />
+                          </button>
+                          <button type="button" class="btn btn-icon btn-ghost" data-mover="1" title="Avançar uma coluna" aria-label="Avançar uma coluna">
+                            <Ico name="chevron-right" size={14} />
+                          </button>
+                          <Excluir form="tarefa" id={t.id} icone="x" classe="btn btn-icon btn-ghost" pergunta={`Excluir a tarefa "${t.titulo}"?`} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p class="coluna-vazia">Arraste uma tarefa para cá</p>
+              </section>
+            );
+          })}
+        </div>
+
+        <dialog id="dlg-tarefa" class="dialog" data-titulo-novo="Nova tarefa">
+          <form method="post" class="dialog-form" novalidate>
+            <input type="hidden" name="_acao" value="adicionar" />
+            <div class="dialog-title" data-titulo>Nova tarefa</div>
+            <div class="dialog-body">
+              <div class="field">
+                <label for="tarefa-titulo">Tarefa</label>
+                <input id="tarefa-titulo" name="titulo" class="input" maxlength="300" data-label="Tarefa" data-required />
+              </div>
+              <div class="field">
+                <label for="tarefa-prazo">Prazo (opcional)</label>
+                <input id="tarefa-prazo" name="prazo" class="input" type="date" />
+              </div>
+              <div class="field">
+                <label for="tarefa-col">Coluna</label>
+                <select id="tarefa-col" name="col" class="input">
+                  {COLUNAS.map((c, i) => <option value={i}>{c}</option>)}
+                </select>
+              </div>
+              <p class="erro" data-erro hidden></p>
+            </div>
+            <div class="dialog-actions">
+              <button type="button" class="btn btn-ghost" data-fechar>Cancelar</button>
+              <button type="submit" class="btn btn-primary">Adicionar</button>
+            </div>
+          </form>
+        </dialog>
+      </>
+    )
+  }
+</App>

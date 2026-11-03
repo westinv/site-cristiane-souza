@@ -1,0 +1,125 @@
+---
+import App from '../../layouts/App.astro';
+import Ico from '../../components/app/Ico.astro';
+import FormDialog from '../../components/app/FormDialog.astro';
+import Excluir from '../../components/app/Excluir.astro';
+import { comprasDaObra, listarFornecedores, listarObras, nomesClientes, SEM_CLIENTE } from '../../lib/db';
+import { forms } from '../../lib/forms';
+import { processarCrud, destinoCrud } from '../../lib/acoes';
+import { brl, data, tagStatus } from '../../lib/format';
+
+export const prerender = false;
+
+const db = Astro.locals.runtime.env.DB;
+const [clientes, fornecedores] = await Promise.all([nomesClientes(db), listarFornecedores(db)]);
+const defObra = forms.obra(clientes);
+const defCompra = forms.compra(fornecedores);
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  const obraId = String(fd.get('obra_id') ?? '');
+  const r = await processarCrud(db, fd, [defObra, defCompra], fd.get('_form') === 'compra' ? { obra_id: obraId } : {});
+  let params: Record<string, string | null> = {};
+  if (r && 'acao' in r && r.form.nome === 'obra') params = r.acao === 'excluir' ? { id: null } : { id: r.id };
+  return Astro.redirect(destinoCrud(Astro.url, r, params), 303);
+}
+
+const obras = await listarObras(db);
+const atual = obras.find((o) => o.id === Astro.url.searchParams.get('id')) ?? obras[0];
+const compras = atual ? await comprasDaObra(db, atual.id) : [];
+const saldo = atual ? (Number(atual.orcado) || 0) - atual.gasto : 0;
+---
+
+<App title="Obras" ativo="obras">
+  <div class="page-head">
+    <div>
+      <h1>Obras</h1>
+      <p class="sub">Compras e gastos por obra</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-abrir="dlg-obra" data-novo><Ico name="plus" />Nova obra</button>
+  </div>
+
+  {clientes.length === 0 && <div class="alerta">Cadastre um cliente antes de criar obras. <a href="/app/clientes?novo=1">Novo cliente ›</a></div>}
+
+  {
+    !atual ? (
+      <div class="card" style="opacity:0.8">Nenhuma obra cadastrada ainda.</div>
+    ) : (
+      <div class="split">
+        <nav class="lista-obras" aria-label="Obras">
+          {obras.map((o) => (
+            <a href={`/app/obras?id=${o.id}`} class:list={['card', 'obra-item', { sel: o.id === atual.id }]} aria-current={o.id === atual.id ? 'true' : undefined}>
+              <span class:list={['tag', tagStatus(o.status)]}>{o.status}</span>
+              <div class="card-title">{o.nome}</div>
+              <div class="card-meta">{o.cliente_nome ?? SEM_CLIENTE}</div>
+            </a>
+          ))}
+        </nav>
+
+        <div class="card" style="gap:18px">
+          <div class="page-head" style="gap:12px">
+            <div>
+              <div class="card-kicker">{atual.cliente_nome ?? SEM_CLIENTE}</div>
+              <div class="card-title" style="font-size:22px">{atual.nome}</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" class="btn btn-secondary" data-abrir="dlg-compra"><Ico name="plus" size={15} />Adicionar compra</button>
+              <button
+                type="button"
+                class="btn btn-icon btn-secondary"
+                title="Editar obra"
+                aria-label="Editar obra"
+                data-abrir="dlg-obra"
+                data-titulo="Editar obra"
+                data-item={JSON.stringify({ id: atual.id, nome: atual.nome, cliente_id: atual.cliente_id ?? '', status: atual.status, orcado: atual.orcado })}
+              >
+                <Ico name="pencil" size={14} />
+              </button>
+              <Excluir form="obra" id={atual.id} titulo="Excluir obra" pergunta={`Excluir a obra "${atual.nome}" e todas as compras dela?`} />
+            </div>
+          </div>
+
+          <div class="metricas">
+            <div class="metrica"><div class="rot">Orçado</div><div class="val">{brl(atual.orcado)}</div></div>
+            <div class="metrica"><div class="rot">Gasto</div><div class="val gasto">{brl(atual.gasto)}</div></div>
+            <div class="metrica"><div class="rot">Saldo</div><div class:list={['val', saldo < 0 ? 'negativo' : 'saldo']}>{brl(saldo)}</div></div>
+          </div>
+
+          {compras.length === 0 ? (
+            <div class="vazio">Nenhuma compra registrada nesta obra.</div>
+          ) : (
+            <div class="tabela-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Fornecedor</th>
+                    <th>Data</th>
+                    <th class="dir">Valor</th>
+                    <th><span class="sr-only">Ações</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {compras.map((k) => (
+                    <tr>
+                      <td>{k.item}</td>
+                      <td>{k.fornecedor}</td>
+                      <td style="white-space:nowrap">{data(k.data)}</td>
+                      <td class="dir" style="font-weight:600">{brl(k.valor)}</td>
+                      <td class="dir">
+                        <Excluir form="compra" id={k.id} icone="x" classe="btn btn-icon btn-ghost" pergunta={`Excluir a compra "${k.item}"?`} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  <FormDialog id="dlg-obra" def={defObra} titulo="Nova obra" />
+  {atual && <FormDialog id="dlg-compra" def={defCompra} titulo="Adicionar compra" ocultos={{ obra_id: atual.id }} />}
+</App>

@@ -1,0 +1,73 @@
+---
+import App from '../../layouts/App.astro';
+import Ico from '../../components/app/Ico.astro';
+import { obterConfig, salvarConfig, type Config } from '../../lib/db';
+import { COBRANCAS } from '../../lib/forms';
+import { voltar } from '../../lib/acoes';
+
+export const prerender = false;
+
+const db = Astro.locals.runtime.env.DB;
+const CAMPOS = ['estudio', 'cnpj', 'email', 'telefone', 'responsavel', 'cau'] as const;
+
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  const ler = (k: string) => String(fd.get(k) ?? '').trim().slice(0, 300);
+  const cobranca = ler('cobranca');
+  const c = Object.fromEntries(CAMPOS.map((k) => [k, ler(k)])) as Omit<Config, 'cobranca'>;
+  await salvarConfig(db, { ...c, cobranca: (COBRANCAS as readonly string[]).includes(cobranca) ? cobranca : 'Por m²' });
+  return Astro.redirect(voltar(Astro.url, { salvo: '1' }), 303);
+}
+
+const cfg = await obterConfig(db);
+const salvo = Astro.url.searchParams.has('salvo');
+---
+
+<App title="Configurações" ativo="cfg">
+  <form method="post" style="display:flex;flex-direction:column;gap:28px;max-width:800px">
+    <div>
+      <h1 style="margin-bottom:6px">Configurações</h1>
+      <p class="sub">Dados do estúdio e preferências</p>
+    </div>
+
+    <div class="card" style="gap:14px">
+      <div class="card-title">Estúdio</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <div class="field"><label for="estudio">Nome do estúdio</label><input id="estudio" name="estudio" class="input" value={cfg.estudio} /></div>
+        <div class="field"><label for="cnpj">CNPJ</label><input id="cnpj" name="cnpj" class="input" value={cfg.cnpj} /></div>
+        <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" class="input" value={cfg.email} /></div>
+        <div class="field"><label for="telefone">Telefone</label><input id="telefone" name="telefone" class="input" value={cfg.telefone} /></div>
+      </div>
+    </div>
+
+    <div class="card" style="gap:14px">
+      <div class="card-title">Responsável</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <div class="field"><label for="responsavel">Nome</label><input id="responsavel" name="responsavel" class="input" value={cfg.responsavel} /></div>
+        <div class="field"><label for="cau">CAU</label><input id="cau" name="cau" class="input" value={cfg.cau} /></div>
+      </div>
+    </div>
+
+    <div class="card" style="gap:14px">
+      <div class="card-title">Preferências</div>
+      <div class="field">
+        <label id="rot-cobranca">Cobrança padrão de projetos</label>
+        <div class="seg" role="radiogroup" aria-labelledby="rot-cobranca" style="align-self:flex-start">
+          {
+            COBRANCAS.map((c) => (
+              <label class="seg-opt">
+                <input type="radio" name="cobranca" value={c} checked={cfg.cobranca === c} />
+                <span>{c}</span>
+              </label>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button type="submit" class="btn btn-primary"><Ico name="check" />Salvar alterações</button>
+      {salvo && <span style="font-size:13px;color:var(--color-accent-2-700)" data-some="2500" role="status">Alterações salvas</span>}
+    </div>
+  </form>
+</App>

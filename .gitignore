@@ -8,3 +8,6 @@ dist/
 .vscode/*
 !.vscode/extensions.json
 npm-debug.log*
+
+# Cloudflare (banco local do wrangler)
+.wrangler/

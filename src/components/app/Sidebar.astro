@@ -1,0 +1,52 @@
+---
+import { Image } from 'astro:assets';
+import logoMark from '../../assets/logo-mark.png';
+import Ico, { type NomeIcone } from './Ico.astro';
+import { inicial } from '../../lib/format';
+
+export type Secao = 'dash' | 'cli' | 'proj' | 'cat' | 'obras' | 'cfg';
+
+interface Props {
+  ativo: Secao;
+  responsavel: string;
+  estudio: string;
+}
+
+const { ativo, responsavel, estudio } = Astro.props;
+
+const NAV: { id: Secao; href: string; label: string; icone: NomeIcone }[] = [
+  { id: 'dash', href: '/app', label: 'Dashboard', icone: 'layout-dashboard' },
+  { id: 'cli', href: '/app/clientes', label: 'Clientes', icone: 'users' },
+  { id: 'proj', href: '/app/projetos', label: 'Projetos', icone: 'kanban' },
+  { id: 'cat', href: '/app/catalogo', label: 'Catálogo', icone: 'book-open' },
+  { id: 'obras', href: '/app/obras', label: 'Obras', icone: 'hammer' },
+  { id: 'cfg', href: '/app/configuracoes', label: 'Configurações', icone: 'settings' },
+];
+---
+
+<aside class="sb">
+  <a href="/app" class="sb-marca">
+    <Image src={logoMark} alt="" height={68} />
+    <span class="sb-name">Cristiane Souza</span>
+  </a>
+  <div class="sb-profile">
+    <div class="avatar" style="width:38px;height:38px;font-size:16px">{inicial(responsavel)}</div>
+    <div>
+      <div class="p-nome">{responsavel}</div>
+      <div class="p-estudio">{estudio}</div>
+    </div>
+  </div>
+  <nav class="sb-nav" aria-label="Seções">
+    {
+      NAV.map((n) => (
+        <a href={n.href} class:list={['nav-link', { active: n.id === ativo }]} aria-current={n.id === ativo ? 'page' : undefined}>
+          <Ico name={n.icone} size={17} />
+          {n.label}
+        </a>
+      ))
+    }
+  </nav>
+  <form method="post" action="/sair" class="sb-out">
+    <button type="submit" class="nav-link"><Ico name="log-out" size={17} />Sair</button>
+  </form>
+</aside>

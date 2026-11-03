@@ -1,0 +1,118 @@
+---
+import App from '../../../layouts/App.astro';
+import Ico from '../../../components/app/Ico.astro';
+import FormDialog from '../../../components/app/FormDialog.astro';
+import Excluir from '../../../components/app/Excluir.astro';
+import { obterCliente, obrasDoCliente, projetosDoCliente, type Cliente } from '../../../lib/db';
+import { forms } from '../../../lib/forms';
+import { processarCrud, destinoCrud } from '../../../lib/acoes';
+import { brl, inicial, tagStatus } from '../../../lib/format';
+
+export const prerender = false;
+
+const db = Astro.locals.runtime.env.DB;
+const id = Astro.params.id!;
+const def = forms.cliente();
+
+if (Astro.request.method === 'POST') {
+  const r = await processarCrud(db, await Astro.request.formData(), [def]);
+  if (r && 'acao' in r && r.acao === 'excluir') return Astro.redirect('/app/clientes', 303);
+  return Astro.redirect(destinoCrud(Astro.url, r), 303);
+}
+
+const c = await obterCliente(db, id);
+const [projetos, obras] = c ? await Promise.all([projetosDoCliente(db, id), obrasDoCliente(db, id)]) : [[], []];
+
+const vinculos = [
+  ...projetos.map((p) => ({
+    tipo: 'Projeto',
+    nome: p.nome,
+    status: p.status,
+    href: `/app/projetos/${p.id}`,
+    info: `${p.feitas}/${p.total} tarefas concluídas`,
+  })),
+  ...obras.map((o) => ({
+    tipo: 'Obra',
+    nome: o.nome,
+    status: o.status,
+    href: `/app/obras?id=${o.id}`,
+    info: `${brl(o.gasto)} de ${brl(o.orcado)}`,
+  })),
+];
+
+const dadosForm = c
+  ? JSON.stringify(Object.fromEntries([['id', c.id], ...def.campos.map((f) => [f.key, c[f.key as keyof Cliente]])]))
+  : '';
+if (!c) Astro.response.status = 404;
+---
+
+<App title={c?.nome ?? 'Cliente'} ativo="cli">
+  <a href="/app/clientes" class="voltar"><Ico name="arrow-left" size={14} />Clientes</a>
+  {
+    !c ? (
+      <div class="card" style="opacity:0.8">Cliente não encontrado.</div>
+    ) : (
+      <>
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <div class="avatar" style="width:64px;height:64px;font-size:26px">{inicial(c.nome)}</div>
+          <div style="flex:1;min-width:200px">
+            <h1 style="margin-bottom:8px">{c.nome}</h1>
+            <div style="display:flex;gap:6px">
+              <span class="tag tag-accent-2">{c.tipo}</span>
+              <span class:list={['tag', c.status === 'Ativo' ? 'tag-accent' : 'tag-outline']}>{c.status}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn btn-secondary" data-abrir="dlg-cliente" data-titulo="Editar cliente" data-item={dadosForm}>
+              <Ico name="pencil" size={15} />Editar
+            </button>
+            <Excluir form="cliente" id={c.id} titulo="Excluir cliente" pergunta={`Excluir o cliente "${c.nome}"? Projetos e obras dele ficam sem cliente.`} />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">
+          <div class="card">
+            <div class="card-kicker">Contato</div>
+            <div class="card-meta"><Ico name="mail" size={13} />{c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : 'Sem email'}</div>
+            <div class="card-meta"><Ico name="phone" size={13} />{c.telefone || 'Sem telefone'}</div>
+            <div class="card-meta"><Ico name="map-pin" size={13} />{[c.endereco, c.cidade].filter(Boolean).join(' · ') || 'Sem endereço'}</div>
+            <div class="card-meta"><Ico name="file-text" size={13} />{c.doc ? `${c.tipo === 'Jurídica' ? 'CNPJ' : 'CPF'} ${c.doc}` : 'Sem documento'}</div>
+          </div>
+          <div class="card">
+            <div class="card-top">
+              <label class="card-kicker" for="notas">Anotações</label>
+              <span class="sub" style="font-size:12px" data-status-de="notas" aria-live="polite"></span>
+            </div>
+            <textarea
+              id="notas"
+              class="input"
+              placeholder="Preferências, medidas, observações..."
+              data-autosave={`/api/clientes/${c.id}/notas`}
+            >{c.notas}</textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <h2 style="font-size:20px;letter-spacing:-0.035em">Projetos e obras</h2>
+          {vinculos.length === 0 && <div class="vazio">Nenhum projeto ou obra para este cliente.</div>}
+          <div class="grid grid-240">
+            {
+              vinculos.map((v) => (
+                <a href={v.href} class="card">
+                  <div class="card-top">
+                    <span class:list={['tag', tagStatus(v.status)]}>{v.status}</span>
+                    <span style="font-size:12px;opacity:0.7">{v.tipo}</span>
+                  </div>
+                  <div class="card-title">{v.nome}</div>
+                  <div class="card-meta">{v.info}</div>
+                </a>
+              ))
+            }
+          </div>
+        </div>
+
+        <FormDialog id="dlg-cliente" def={def} titulo="Editar cliente" />
+      </>
+    )
+  }
+</App>
